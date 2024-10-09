@@ -14,7 +14,9 @@ L'architecture du projet est la suivante :
 │   └── calculatrice.py
 │                                    Un exemple de classe en python
 ├── tests
-│   └── test_calculatrice.py
+│   ├── test_0_calculatrice.py
+│   ├── test_1_1_km_a_pied.py
+│   └── test_2_fizz_buzz.py
 │                                    Les tests associés à la classe
 └── venv
     └── bin
