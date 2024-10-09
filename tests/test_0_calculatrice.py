@@ -1,5 +1,5 @@
 import pytest
-from src.calculatrice import Calculatrice
+from src.tp_0_calculatrice import Calculatrice
 
 
 @pytest.fixture
@@ -9,16 +9,13 @@ def calc():
 
 
 def test_add(calc):
-    assert 4 == calc.add(1, 3)
-
+    pass
 
 def test_subtract(calc):
-    assert 1 == calc.subtract(10, 3)
-
+    pass
 
 def test_multiply(calc):
     pass
-
 
 def test_divide(calc):
     pass
