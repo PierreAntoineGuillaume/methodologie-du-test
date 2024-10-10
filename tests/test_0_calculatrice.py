@@ -13,7 +13,7 @@ def test_add(calc):
 
 
 def test_subtract(calc):
-    assert 1 == calc.subtract(10, 3)
+    assert 1 == calc.subtract(10, 9)
 
 
 def test_multiply(calc):
