@@ -11,11 +11,14 @@ def calc():
 def test_add(calc):
     pass
 
+
 def test_subtract(calc):
     pass
 
+
 def test_multiply(calc):
     pass
+
 
 def test_divide(calc):
     pass
