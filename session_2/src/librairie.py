@@ -92,6 +92,7 @@ def add_book():
     }
     return jsonify(book), 201
 
+
 @app.route("/books/<int:book_id>", methods=["PUT"])
 def update_book(book_id):
     data = request.get_json()
