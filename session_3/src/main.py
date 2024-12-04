@@ -45,6 +45,7 @@ class Labelizer:
     def labelize(self, amount):
         pass
 
+
 class FairLabelizer(Labelizer):
     def __init__(self):
         super().__init__()
