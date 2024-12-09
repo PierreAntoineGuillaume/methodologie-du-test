@@ -3,7 +3,7 @@ import pandas as pd
 
 class Cleaner:
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
-        return df
+        return df.dropna(axis=0)
 
 
 class PandasCsvProvider:

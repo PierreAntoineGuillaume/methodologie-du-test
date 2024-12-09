@@ -16,4 +16,5 @@ def test_clean_dataframe() -> None:
     )
     cleaner = Cleaner()
     df = cleaner.clean(df)
+    print(df)
     assert df.empty
