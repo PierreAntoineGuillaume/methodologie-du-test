@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from typing import Any
 
 
 class TupleSale:
@@ -30,6 +31,16 @@ class TuplePropre:
         self.surface = surface
         self.pieces = pieces
         self.type_bien = type_bien
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, TuplePropre):
+            raise NotImplementedError
+        return (
+            other.pieces == self.pieces
+            and other.surface == self.surface
+            and other.type_bien == self.type_bien
+            and other.prix == self.prix
+        )
 
 
 class TuplePropreSansPrix:
