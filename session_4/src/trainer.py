@@ -18,7 +18,10 @@ from data import TuplePropre, TuplePropreSansPrix
 class Metadata:
     name: str
 
-    def __init__(self, name: str,):
+    def __init__(
+        self,
+        name: str,
+    ):
         self.name = name
 
 

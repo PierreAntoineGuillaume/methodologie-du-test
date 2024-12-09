@@ -16,6 +16,8 @@ def configure_logger(logger_dsn: str) -> None:
     level = logging.INFO
     level_as_str = "INFO"
 
+    log_file_path = Path(log_file)
+    log_file_path.parents[0].mkdir(parents=True, exist_ok=True)
     log_handlers: list[logging.Handler] = [logging.FileHandler(log_file)]
 
     for query in queries:
@@ -33,8 +35,6 @@ def configure_logger(logger_dsn: str) -> None:
                     f"unknown query configuration {key} only `level` supported"
                 )
 
-    log_file_path = Path(log_file)
-    log_file_path.parents[0].mkdir(parents=True, exist_ok=True)
     logging.basicConfig(
         level=level,
         format="%(asctime)s %(levelname)s: %(message)s",
