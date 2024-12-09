@@ -1,3 +1,5 @@
+from typing import Any
+
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
@@ -5,6 +7,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, LabelEncoder, FunctionTransformer
+import pickle
 
 
 class Cleaner:
@@ -37,19 +40,25 @@ class Metadata:
     def __str__(self) -> str:
         return f"Metadata({self.accuracy})"
 
-    def __eq__(self, other: "Metadata") -> bool:
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Metadata):
+            return NotImplemented
         return self.accuracy == other.accuracy
 
-    def __lt__(self, other: "Metadata") -> bool:
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, Metadata):
+            return NotImplemented
         return self.accuracy < other.accuracy
 
-    def __le__(self, other: "Metadata") -> bool:
+    def __le__(self, other: Any) -> bool:
+        if not isinstance(other, Metadata):
+            return NotImplemented
         return self == other or self < other
 
-    def __gt__(self, other: "Metadata") -> bool:
+    def __gt__(self, other: Any) -> bool:
         return not self <= other
 
-    def __ge__(self, other: "Metadata") -> bool:
+    def __ge__(self, other: Any) -> bool:
         return not self < other
 
 
@@ -59,7 +68,7 @@ class Model:
         self.metadata: Metadata = metadata
 
 
-def hash_transform(x):
+def hash_transform(x: pd.DataFrame) -> pd.DataFrame:
     return x.map(hash)
 
 
@@ -110,9 +119,6 @@ class Trainer:
         return Model(pipeline=pipeline, metadata=Metadata(accuracy))
 
 
-import pickle
-
-
 class Saver:
     def save(self, model: Model, filepath: str) -> None:
         raise NotImplementedError
@@ -130,7 +136,7 @@ class FilesystemSaver(Saver):
         try:
             with open(filepath, "rb") as file:
                 model = pickle.load(file)
-            return model
+            return model  # type: ignore
         except FileNotFoundError:
             return None
 
@@ -145,7 +151,7 @@ class ModelComparatorAndSaver:
     def load(self, filepath: str) -> None | Model:
         return self.saver.load(filepath)
 
-    def overwrite_if_better_than_reference(self, model: Model):
+    def overwrite_if_better_than_reference(self, model: Model) -> None:
         previous = self.load("model.pkl")
         if previous is None:
             print("No previous model")
