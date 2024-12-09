@@ -16,7 +16,6 @@ def test_clean_dataframe() -> None:
     )
     cleaner = Cleaner()
     df = cleaner.clean(df)
-    print(df)
     assert df.empty
 
 
@@ -34,7 +33,25 @@ def test_clean_dataframe_keeps_legitimate_amounts() -> None:
     )
     cleaner = Cleaner()
     df = cleaner.clean(df)
-    assert df["amount"].to_list() == ["1"]
+    assert df["amount"].to_list() == [1.0]
+
+
+def test_clean_dataframe_keeps_legitimate_labels() -> None:
+    fake_data = ["1", "1", "1", "1", "1", "1", "1"]
+    labels = ["legit", "fraud", "high_risk", "low_risk", "", None, 1]
+    df = pd.DataFrame(
+        {
+            "transaction_id": fake_data,
+            "client_id": fake_data,
+            "product_id": fake_data,
+            "date": fake_data,
+            "amount": fake_data,
+            "label": labels,
+        }
+    )
+    cleaner = Cleaner()
+    df = cleaner.clean(df)
+    assert df["label"].to_list() == ["legit", "fraud", "high_risk", "low_risk"]
 
 
 def test_clean_dataframe_trims_nonessential_data() -> None:
