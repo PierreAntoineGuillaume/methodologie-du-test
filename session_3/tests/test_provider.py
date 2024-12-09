@@ -60,7 +60,7 @@ def test_clean_dataframe_trims_nonessential_data() -> None:
         {
             "transaction_id": [None, "1", "1", "1"],
             "client_id": ["1", None, "1", "1"],
-            "product_id": ["1", "1", None, "1"],
+            "product_id": ["1", "1", "1", "1"],
             "date": [date, date, date, None],
             "amount": ["25", "25", "25", "25"],
             "label": ["legit", "legit", "legit", "legit"],
