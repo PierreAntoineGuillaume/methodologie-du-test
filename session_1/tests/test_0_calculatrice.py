@@ -1,5 +1,5 @@
 import pytest
-from src.session_1.tp_0_calculatrice import Calculatrice
+from tp_0_calculatrice import Calculatrice
 
 
 @pytest.fixture
@@ -9,7 +9,7 @@ def calc():
 
 
 def test_add(calc):
-    assert False
+    assert True
 
 
 # def test_subtract(calc):

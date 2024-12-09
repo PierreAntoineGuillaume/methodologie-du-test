@@ -1,4 +1,4 @@
-from src.session_1.tp_3_bowling_game import Game
+from tp_3_bowling_game import Game
 import pytest
 
 
