@@ -1,17 +1,26 @@
 #!/usr/bin/env python
-from pipeline import PandasCsvProvider, Cleaner, Trainer
+from pipeline import (
+    PandasCsvProvider,
+    Cleaner,
+    Trainer,
+    ModelComparatorAndSaver,
+    PandasProvider,
+    FilesystemSaver,
+)
 
 
-def main() -> None:
-    provider = PandasCsvProvider("transactions-fair.csv")
+def main(provider: PandasProvider, saver: ModelComparatorAndSaver) -> None:
     cleaner = Cleaner()
     trainer = Trainer()
+
     df = provider.get()
     df = cleaner.clean(df)
     model = trainer.train(df)
-    print(model.metadata)
-
+    saver.overwrite_if_better_than_reference(model)
 
 
 if __name__ == "__main__":
-    main()
+    main(
+        provider=PandasCsvProvider("transactions-fair.csv"),
+        saver=ModelComparatorAndSaver(FilesystemSaver()),
+    )

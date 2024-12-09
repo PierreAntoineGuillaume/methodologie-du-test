@@ -9,9 +9,7 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder, FunctionTransfor
 
 class Cleaner:
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = df.drop(
-            labels=["date", "transaction_id", "client_id"], axis=1
-        )
+        df = df.drop(labels=["date", "transaction_id", "client_id"], axis=1)
         valid_values = ["legit", "fraud", "high_risk", "low_risk"]
         df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
         df = df[df["amount"].notna() & (df["amount"] >= 1)]
@@ -19,7 +17,12 @@ class Cleaner:
         return df.dropna(axis=0)
 
 
-class PandasCsvProvider:
+class PandasProvider:
+    def get(self) -> pd.DataFrame:
+        raise NotImplementedError
+
+
+class PandasCsvProvider(PandasProvider):
     def __init__(self, path: str) -> None:
         self.path: str = path
 
@@ -30,13 +33,34 @@ class PandasCsvProvider:
 class Metadata:
     def __init__(self, accuracy: float):
         self.accuracy: float = accuracy
+
     def __str__(self) -> str:
         return f"Metadata({self.accuracy})"
+
+    def __eq__(self, other: "Metadata") -> bool:
+        return self.accuracy == other.accuracy
+
+    def __lt__(self, other: "Metadata") -> bool:
+        return self.accuracy < other.accuracy
+
+    def __le__(self, other: "Metadata") -> bool:
+        return self == other or self < other
+
+    def __gt__(self, other: "Metadata") -> bool:
+        return not self <= other
+
+    def __ge__(self, other: "Metadata") -> bool:
+        return not self < other
+
 
 class Model:
     def __init__(self, pipeline: Pipeline, metadata: Metadata):
         self.pipeline: Pipeline = pipeline
         self.metadata: Metadata = metadata
+
+
+def hash_transform(x):
+    return x.map(hash)
 
 
 class Trainer:
@@ -53,24 +77,29 @@ class Trainer:
         preprocessor = ColumnTransformer(
             transformers=[
                 # For product_id: hash it or apply custom logic (ensure it's treated as DataFrame here)
-                ("product_id", FunctionTransformer(lambda x: x.map(hash)), ["product_id"]),
+                (
+                    "product_id",
+                    FunctionTransformer(hash_transform),
+                    ["product_id"],
+                ),
                 # Scale amount
-                ("amount", StandardScaler(), ["amount"])
+                ("amount", StandardScaler(), ["amount"]),
             ],
-            remainder="drop"
+            remainder="drop",
         )
 
         # Define the model
         model = RandomForestClassifier(random_state=42)
 
         # Create the pipeline
-        pipeline = Pipeline(steps=[
-            ("preprocessor", preprocessor),
-            ("classifier", model)
-        ])
+        pipeline = Pipeline(
+            steps=[("preprocessor", preprocessor), ("classifier", model)]
+        )
 
         # Split data for training and evaluation
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=20)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=20, stratify=y
+        )
 
         # Train the pipeline
         pipeline.fit(X_train, y_train)
@@ -78,7 +107,56 @@ class Trainer:
         y_pred = pipeline.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
 
-        return Model(
-            pipeline=pipeline,
-            metadata=Metadata(accuracy)
-        )
+        return Model(pipeline=pipeline, metadata=Metadata(accuracy))
+
+
+import pickle
+
+
+class Saver:
+    def save(self, model: Model, filepath: str) -> None:
+        raise NotImplementedError
+
+    def load(self, filepath: str) -> None | Model:
+        raise NotImplementedError
+
+
+class FilesystemSaver(Saver):
+    def save(self, model: Model, filepath: str) -> None:
+        with open(filepath, "wb") as file:
+            pickle.dump(model, file)
+
+    def load(self, filepath: str) -> None | Model:
+        try:
+            with open(filepath, "rb") as file:
+                model = pickle.load(file)
+            return model
+        except FileNotFoundError:
+            return None
+
+
+class ModelComparatorAndSaver:
+    def __init__(self, saver: Saver):
+        self.saver: Saver = saver
+
+    def save(self, model: Model, filepath: str) -> None:
+        self.saver.save(model, filepath)
+
+    def load(self, filepath: str) -> None | Model:
+        return self.saver.load(filepath)
+
+    def overwrite_if_better_than_reference(self, model: Model):
+        previous = self.load("model.pkl")
+        if previous is None:
+            print("No previous model")
+            self.save(model, "model.pkl")
+        else:
+            if previous.metadata <= model.metadata:
+                print(
+                    f"previous: {previous.metadata} <= new: {model.metadata}, saving new model"
+                )
+                self.save(model, "model.pkl")
+            else:
+                print(
+                    f"previous: {previous.metadata} > new: {model.metadata}, ignoring new model"
+                )
