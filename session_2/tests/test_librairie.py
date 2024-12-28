@@ -1,5 +1,5 @@
 import pytest
-from src.librairie import app, jsonify
+from src.librairie import app
 
 
 @pytest.fixture
