@@ -7,4 +7,4 @@ set +x
 source .venv/bin/activate
 set -x
 python3 -m pip install -r requirements.txt
-python3 src/librairie.py
+python3 src/tasks.py
