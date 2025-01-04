@@ -52,6 +52,22 @@ def test_add_task(client) -> None:
     assert keys["worth"] == 60
 
 
+def test_add_without_data(client) -> None:
+    response = client.post("/tasks", json={})
+    assert response.status_code == 400
+
+
+def test_complete_missing_task(client) -> None:
+    response = client.post("/tasks/200000000/complete", json={})
+    assert response.status_code == 404
+
+
+def test_complete_already_completed_task(client) -> None:
+    id = ajouter_tache_recuperer_id(client)
+    assert client.post(f"/tasks/{id}/complete", json={}).status_code == 200
+    assert client.post(f"/tasks/{id}/complete", json={}).status_code == 400
+
+
 def test_complete_task(client) -> None:
     task_id = ajouter_tache_recuperer_id(client)
     score_initial = client.get("/scores/total").get_json()["total_score"]
@@ -80,3 +96,47 @@ def test_clean_task(client) -> None:
         "0 tâches obsolètes ou complétées supprimées"
         == client.delete("/tasks/cleanup").get_json()["message"]
     )
+
+
+def test_due_date_none(client) -> None:
+    res = client.post(
+        "/tasks",
+        json={
+            "title": "Preparer le rapport",
+            "description": "Finaliser le rapport pour la reunion",
+            "priority": 5,
+            "difficulty": 4,
+        },
+    )
+
+    assert res.get_json()["worth"] == 200
+
+
+def test_due_date_in_past(client) -> None:
+    res = client.post(
+        "/tasks",
+        json={
+            "title": "Preparer le rapport",
+            "description": "Finaliser le rapport pour la reunion",
+            "due_date": "2000-01-01",
+            "priority": 5,
+            "difficulty": 4,
+        },
+    )
+
+    assert res.get_json()["worth"] == 100
+
+
+def test_due_date_bad_format(client) -> None:
+    res = client.post(
+        "/tasks",
+        json={
+            "title": "Preparer le rapport",
+            "description": "Finaliser le rapport pour la reunion",
+            "due_date": "azeaze",
+            "priority": 5,
+            "difficulty": 4,
+        },
+    )
+
+    assert res.get_json()["worth"] == 200

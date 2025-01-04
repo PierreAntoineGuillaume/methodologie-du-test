@@ -60,7 +60,7 @@ def close_connection(exception):
         db.close()
 
 
-def init_db():
+def init_db():  # pragma: no cover
     with app.app_context():
         db = get_existing_or_create_db()
         cursor = db.cursor()
@@ -217,6 +217,6 @@ def get_active_tasks():
     return jsonify(result), 200
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     init_db()
     app.run(host=APP_HOST, port=APP_PORT, debug=APP_DEBUG)
