@@ -54,9 +54,11 @@ def test_add_task(client) -> None:
 
 def test_clean_task(client) -> None:
     task_id = ajouter_tache_recuperer_id(client)
+    score_initial = client.get("/scores/total").get_json()["total_score"]
     response = client.post(f"/tasks/{task_id}/complete")
     assert response.status_code == 200
     assert response.get_json() == {
         "message": "Tâche marquée comme terminée",
         "score_added": 60,
     }
+    assert client.get("/scores/total").get_json()["total_score"] == score_initial + 60
