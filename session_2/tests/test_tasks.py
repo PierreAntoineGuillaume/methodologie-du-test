@@ -52,7 +52,7 @@ def test_add_task(client) -> None:
     assert keys["worth"] == 60
 
 
-def test_clean_task(client) -> None:
+def test_complete_task(client) -> None:
     task_id = ajouter_tache_recuperer_id(client)
     score_initial = client.get("/scores/total").get_json()["total_score"]
     response = client.post(f"/tasks/{task_id}/complete")
@@ -62,3 +62,21 @@ def test_clean_task(client) -> None:
         "score_added": 60,
     }
     assert client.get("/scores/total").get_json()["total_score"] == score_initial + 60
+
+
+def test_clean_task(client) -> None:
+    client.delete("/tasks/cleanup")
+    task_id = ajouter_tache_recuperer_id(client)
+    assert (
+        "0 tâches obsolètes ou complétées supprimées"
+        == client.delete("/tasks/cleanup").get_json()["message"]
+    )
+    client.post(f"/tasks/{task_id}/complete")
+    assert (
+        "1 tâches obsolètes ou complétées supprimées"
+        == client.delete("/tasks/cleanup").get_json()["message"]
+    )
+    assert (
+        "0 tâches obsolètes ou complétées supprimées"
+        == client.delete("/tasks/cleanup").get_json()["message"]
+    )
