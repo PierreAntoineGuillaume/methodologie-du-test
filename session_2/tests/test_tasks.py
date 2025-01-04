@@ -140,3 +140,18 @@ def test_due_date_bad_format(client) -> None:
     )
 
     assert res.get_json()["worth"] == 200
+
+
+def test_active(client) -> None:
+    res = client.get("/tasks/active")
+    array = res.get_json()
+    for task in array:
+        id = task["id"]
+        client.post(f"/tasks/{id}/complete")
+    res = client.get("/tasks/active")
+    assert res.status_code == 404
+    assert res.get_json()["message"] == "Aucune tâche active trouvée."
+    id = ajouter_tache_recuperer_id(client)
+    res = client.get("/tasks/active")
+    first_task = res.get_json()[0]
+    assert first_task["id"] == id
