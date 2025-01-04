@@ -88,6 +88,7 @@ def test_clean_task(client) -> None:
         == client.delete("/tasks/cleanup").get_json()["message"]
     )
     client.post(f"/tasks/{task_id}/complete")
+    score_initial = client.get("/scores/total").get_json()["total_score"]
     assert (
         "1 tâches obsolètes ou complétées supprimées"
         == client.delete("/tasks/cleanup").get_json()["message"]
@@ -96,6 +97,7 @@ def test_clean_task(client) -> None:
         "0 tâches obsolètes ou complétées supprimées"
         == client.delete("/tasks/cleanup").get_json()["message"]
     )
+    assert client.get("/scores/total").get_json()["total_score"] == score_initial
 
 
 def test_due_date_none(client) -> None:
