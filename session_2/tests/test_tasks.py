@@ -155,3 +155,20 @@ def test_active(client) -> None:
     res = client.get("/tasks/active")
     first_task = res.get_json()[0]
     assert first_task["id"] == id
+
+
+def test_borrow_book_with_mock(mocker, client) -> None:
+    mock_db = mocker.patch("src.tasks.get_existing_or_create_db")
+    mock_cursor = mocker.MagicMock()
+    mock_cursor.fetchone.return_value = {
+        "priority": 20,
+        "difficulty": 3,
+        "completed": 0,
+        "due_date": "",
+    }
+
+    mock_db.return_value.cursor.return_value = mock_cursor
+
+    response = client.post("/tasks/200000000/complete")
+    assert response.status_code == 200
+    assert response.get_json()["score_added"] == 600
