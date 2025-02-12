@@ -34,14 +34,19 @@ class FilesystemModelComparator(ModelComparator):
             with open(self.json_path, "r") as file:
                 data = json.load(file)
                 for item in data:
-                    self.wrapped.add_metadata(Metadata(name=item["name"]))
+                    self.wrapped.add_metadata(
+                        Metadata(name=item["name"], score=item["score"])
+                    )
         except (FileNotFoundError, json.JSONDecodeError):
             pass
 
     def _save_metadata(self) -> None:
         with open(self.json_path, "w") as file:
             json.dump(
-                [{"name": m.name} for m in self.wrapped.metadata_list],
+                [
+                    {"name": m.name, "score": m.score}
+                    for m in self.wrapped.metadata_list
+                ],
                 file,
             )
 

@@ -9,6 +9,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 
 from data import TuplePropre, TuplePropreSansPrix
 
@@ -19,8 +21,10 @@ class Metadata:
     def __init__(
         self,
         name: str,
+        score: float,
     ):
         self.name = name
+        self.score = score
 
 
 class Model:
@@ -98,7 +102,7 @@ class ScikitLearnTrainer(Trainer):
 
     def train(self, data: list[TuplePropre]) -> Model:
         training_id = HRID().generate()
-        self.logger.info(f"training model {training_id}")
+        self.logger.info(f"Training model {training_id}")
 
         X = [
             {
@@ -109,10 +113,15 @@ class ScikitLearnTrainer(Trainer):
             for item in data
         ]
         y = [item.prix for item in data]
-        y_train = y
 
-        x_train = pd.DataFrame(X)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=self.test_size, random_state=self.random_state
+        )
 
+        x_train = pd.DataFrame(X_train)
+        x_test = pd.DataFrame(X_test)
+
+        # Créer le pipeline pour l'entraînement du modèle
         pipeline = Pipeline(
             steps=[
                 (
@@ -128,4 +137,10 @@ class ScikitLearnTrainer(Trainer):
 
         pipeline.fit(x_train, y_train)
 
-        return Model(pipeline=pipeline, metadata=Metadata(name=training_id))
+        predictions = pipeline.predict(x_test)
+        mse = mean_squared_error(y_test, predictions)
+        rmse = mse**0.5
+
+        metadata = Metadata(name=training_id, score=rmse)
+
+        return Model(pipeline=pipeline, metadata=metadata)
