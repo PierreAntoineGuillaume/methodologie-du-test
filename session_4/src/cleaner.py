@@ -18,9 +18,9 @@ class Cleaner:
                 pieces = int(item.pieces)
                 type_str = item.type_bien.lower()
                 if (
-                    prix == 0
-                    or surface == 0
-                    or pieces == 0
+                    prix < 1
+                    or surface < 1
+                    or pieces < 1
                     or (type_str != "appartement" and type_str != "maison")
                 ):
                     continue
