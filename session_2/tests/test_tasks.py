@@ -80,15 +80,16 @@ def test_complete_task(client) -> None:
     assert client.get("/scores/total").get_json()["total_score"] == score_initial + 60
 
 
-def test_clean_task(client) -> None:
+def test_task_lifecycle(client) -> None:
     client.delete("/tasks/cleanup")
+    score_initial = client.get("/scores/total").get_json()["total_score"]
     task_id = ajouter_tache_recuperer_id(client)
     assert (
         "0 tâches obsolètes ou complétées supprimées"
         == client.delete("/tasks/cleanup").get_json()["message"]
     )
-    client.post(f"/tasks/{task_id}/complete")
-    score_initial = client.get("/scores/total").get_json()["total_score"]
+    added_score = client.post(f"/tasks/{task_id}/complete").get_json()['score_added']
+    score_after_complete = client.get("/scores/total").get_json()["total_score"]
     assert (
         "1 tâches obsolètes ou complétées supprimées"
         == client.delete("/tasks/cleanup").get_json()["message"]
@@ -97,7 +98,9 @@ def test_clean_task(client) -> None:
         "0 tâches obsolètes ou complétées supprimées"
         == client.delete("/tasks/cleanup").get_json()["message"]
     )
-    assert client.get("/scores/total").get_json()["total_score"] == score_initial
+    score_after_cleanup = client.get("/scores/total").get_json()["total_score"]
+    assert score_after_cleanup == score_after_complete
+    assert score_after_cleanup == score_initial + added_score
 
 
 def test_due_date_none(client) -> None:
@@ -144,12 +147,8 @@ def test_due_date_bad_format(client) -> None:
     assert res.get_json()["worth"] == 200
 
 
-def test_active(client) -> None:
-    res = client.get("/tasks/active")
-    array = res.get_json()
-    for task in array:
-        id = task["id"]
-        client.post(f"/tasks/{id}/complete")
+def test_completed_task_are_not_active_anymore(client) -> None:
+    cleanup_all_active_tasks(client)
     res = client.get("/tasks/active")
     assert res.status_code == 404
     assert res.get_json()["message"] == "Aucune tâche active trouvée."
@@ -157,6 +156,18 @@ def test_active(client) -> None:
     res = client.get("/tasks/active")
     first_task = res.get_json()[0]
     assert first_task["id"] == id
+    client.post(f"/tasks/{id}/complete")
+    assert client.get("/tasks/active").get_json() == {
+        'message': 'Aucune tâche active trouvée.',
+    }
+
+
+def cleanup_all_active_tasks(client):
+    res = client.get("/tasks/active")
+    array = res.get_json()
+    for task in array:
+        id = task["id"]
+        client.post(f"/tasks/{id}/complete")
 
 
 def test_borrow_book_with_mock(mocker, client) -> None:
