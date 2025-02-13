@@ -9,15 +9,37 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, LabelEncoder, FunctionTransformer
 import pickle
 
+import logging
+
 
 class Cleaner:
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        lines_before = df.shape[0]
+
         df = df.drop(labels=["date", "transaction_id", "client_id"], axis=1)
-        valid_values = ["legit", "fraud", "high_risk", "low_risk"]
+
         df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
         df = df[df["amount"].notna() & (df["amount"] >= 1)]
+
+        valid_values = ["legit", "fraud", "high_risk", "low_risk"]
         df = df[df["label"].isin(valid_values)]
-        return df.dropna(axis=0)
+
+        df = df.dropna(axis=0)
+
+        lines_after = df.shape[0]
+        filter_ratio = lines_after/lines_before
+        logger = logging.getLogger('cleaner')
+
+        logger.info("cleaned tuples", extra={
+            'before': lines_before,
+            'after': lines_after,
+            'ratio': filter_ratio,
+        })
+
+        if filter_ratio < 0.1:
+            raise ValueError(f"trop de mauvaises valeurs, taux de transfo < 10%: {lines_after}/{lines_before}={filter_ratio}")
+
+        return df
 
 
 class PandasProvider:
