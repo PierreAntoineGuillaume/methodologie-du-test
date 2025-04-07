@@ -28,9 +28,8 @@ class Cleaner:
 
         lines_after = df.shape[0]
         filter_ratio = lines_after/lines_before
-        logger = logging.getLogger('cleaner')
 
-        logger.info("cleaned tuples", extra={
+        logging.getLogger().info(f"cleaned tuples {lines_after}/{lines_before}={filter_ratio}", extra={
             'before': lines_before,
             'after': lines_after,
             'ratio': filter_ratio,
